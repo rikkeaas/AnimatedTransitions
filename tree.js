@@ -194,6 +194,7 @@ function update(source) {
     var nodeEnter = node
         .enter()
         .append('g')
+        .call(dragListener)
         .attr('class', 'node')
         .attr('transform', function(d) {
             return "translate(" + (source.x0) + ", " + source.y0 + ")";
