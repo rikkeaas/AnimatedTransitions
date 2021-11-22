@@ -1,0 +1,206 @@
+/* CSS */
+@font-face {
+    font-family: NeutralFace;
+    src: url("NeutralFace.otf") format("opentype");
+}
+
+@font-face {
+    font-family: NeutralFaceBold;
+    font-weight: bold;
+    src: url("NeutralFace-Bold.otf") format("opentype");
+}
+
+#my-button {
+    background: #3c998b;
+    padding: 10px; 
+    display: flex;
+    justify-content: center;
+  }
+
+.title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fst-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 30px;
+    padding-top: 10px;
+}
+.grammar {
+    color: #3c998b;
+    padding-right: 200px;
+}
+
+.input {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    height:100%
+}
+
+#userString {
+    width: 100px
+}
+
+.error {
+    color: #fc4a1a
+}
+
+.btn-forward {
+    text-align: center;
+    display: inline-block;
+    padding: 20px 40px;
+    border: 1px solid #fff;
+    cursor: pointer;
+    letter-spacing: 2px;
+    position:relative;
+    overflow:hidden;
+    margin: 0 20px;
+    background-color: transparent;
+    color: #fff;
+    margin-left: 40px;
+}
+
+.btn-forward:disabled {
+    border: 1px solid rgb(173, 173, 173);
+    color: rgb(173, 173, 173);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-forward:disabled:before {
+    opacity: 0;
+}
+  
+.btn-forward:before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 0;
+    background : #fff;
+    left: 0;
+    bottom: 0;
+    transition: all .3s;
+    opacity: 0.3;
+}
+  
+.btn-forward:hover:before {
+    width: 100%;
+}
+
+  
+.btn-backward {
+    text-align: center;
+    display: inline-block;
+    padding: 15px 40px;
+    border: 1px solid #fff;
+    cursor: pointer;
+    letter-spacing: 2px;
+    position:relative;
+    overflow:hidden;
+    margin: 0 20px;
+    background-color: transparent;
+    color: #fff;
+    margin-right: 40px;
+}
+  
+.btn-backward:before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 0;
+    background : #fff;
+    left: 100%;
+    bottom: 0;
+    transition: all .3s;
+    opacity: 0.3;
+}
+  
+.btn-backward:disabled {
+    border: 1px solid rgb(173, 173, 173);
+    color: rgb(173, 173, 173);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-backward:disabled:before {
+    opacity: 0;
+}
+
+.btn-backward:hover:before {
+    width: 100%;
+    left:0;
+}
+
+.btn-parse {
+    text-align: center;
+    display: inline-block;
+    padding: 15px 40px;
+    border: 1px solid #3c998b;
+    cursor: pointer;
+    letter-spacing: 2px;
+    position:relative;
+    overflow:hidden;
+    margin: 0 20px;
+    background-color: transparent;
+    color: #3c998b;
+  }
+  
+  .btn-parse:before {
+    content: "";
+    position: absolute;
+    height: 0;
+    width: 100%;
+    background : #3c998b;
+    left: 0;
+    top: 0;
+    transition: all .3s;
+    opacity: 0.3;
+  }
+  
+  .btn-parse:hover:before {
+    height: 100%;
+  }
+  
+
+.node rect {
+    fill: #fff;
+    stroke: #f7b733;
+    stroke-width: 3px;
+}
+
+.node text {
+    font: 20px sans-serif;
+}
+
+.mainName {
+    fill: black;
+}
+
+.expandedChild {
+    fill: lightgrey;
+}
+
+.nonExpandedChild {
+    fill: black;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
