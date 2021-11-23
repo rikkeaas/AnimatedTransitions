@@ -12,88 +12,142 @@ function initiateDrag(d, domNode) {
         else return -1; // a is the hovered element, bring "a" to the front
     });
     // if nodes has children, remove the links and nodes
-    if (nodes.length > 1) {
-        // remove link paths
-        var treeData = treemap(root);
-        links = treeData.descendants().slice(1);
-        nodePaths = svg.selectAll("path.link")
-            .data(links, function(d) {
-                //console.log(d)
-                return d.id;
-            }).remove();
-        // remove child nodes
-        nodesExit = svg.selectAll("g.node")
-            .data(nodes, function(d) {
-                return d.id;
-            }).filter(function(d, i) {
-                if (d.id == draggingNode.id) {
-                    return false;
-                }
-                return true;
-            }).remove();
-    }
+    // if (nodes.length > 1) {
+    //     // remove link paths
+    //     var treeData = treemap(root);
+    //     links = treeData.descendants().slice(1);
+    //     nodePaths = svg.selectAll("path.link")
+    //         .data(links, function(d) {
+    //             return d.id;
+    //         }).remove();
+    //     // remove child nodes
+    //     nodesExit = svg.selectAll("g.node")
+    //         .data(nodes, function(d) {
+    //             return d.id;
+    //         }).filter(function(d, i) {
+    //             if (d.id == draggingNode.id) {
+    //                 return false;
+    //             }
+    //             return true;
+    //         }).remove();
+    // }
 
     // remove parent link
     // parentLink = links(tree.nodes(draggingNode.parent));
-    // svg.selectAll('path.link').filter(function(d, i) {
-    //     if (d.id == draggingNode.id) {
-    //         return true;
-    //     }
-    //     return false;
-    // }).remove();
+    svg.selectAll('path.link').filter(function(d, i) {
+         if (d.id == draggingNode.id) {
+             return true;
+         }
+         return false;
+    }).remove();
 
     dragStarted = null;
 }
-   
+  
+function updateChildDepths(parent) {
+    let pDepth = parent.depth;
+
+    if (parent.children) {
+        parent.children.forEach(child => {
+            child.depth = pDepth + 1
+            updateChildDepths(child);
+        });
+    }
+
+    if (parent._children) {
+        parent._children.forEach(child => {
+            child.depth = pDepth + 1
+            updateChildDepths(child);
+        });
+    }
+}
+
+function isAncestor(node, ancestor) {
+    while (node.parent) {
+        node = node.parent;
+        if (node == ancestor) {
+            return true;
+        }
+    }
+    return false;
+}
+
 dragListener = d3.drag()
-        .on("start", function(d) {
+        .on("start", function(event, d) {
             if (d == root) {
                 return;
             }
             dragStarted = true;
-            var treeData = treemap(root);
-            nodes = treeData.descendants();
+            //var treeData = treemap(root);
+            //nodes = treeData.descendants();
         })
-        .on("drag", function(d) {
+        .on("drag", function(event, d) {
             if (d == root) {
                 return;
             }
             if (dragStarted) {
                 domNode = this;
+                console.log("Thhiiis", this);
                 initiateDrag(d, domNode);
             }
 
-            let pos = d3.pointer(event);
-            console.log(pos);
-            d.x0 = pos[0];
-            d.y0 = pos[1];
+            //let pos = d3.pointer(event, this.state.svg.node());
+            d.x0 = event.x;
+            d.y0 = event.y;
             var node = d3.select(this);
-            node.attr("transform", "translate(" + d.y0 + "," + d.x0 + ")");
+            node.attr("transform", "translate(" + d.x0 + "," + d.y0 + ")");
             updateTempConnector();
-        }).on("end", function(d) {
+        }).on("end", function(event, d) {
             if (d == root) {
                 return;
             }
+            if (selectedNode == root) { // Can't swap root node
+                endDrag();
+                return;
+            }
+
             domNode = this;
             if (selectedNode) {
+                if (isAncestor(draggingNode, selectedNode) || isAncestor(selectedNode, draggingNode)) {
+                    endDrag();
+                    return;
+                }
+                //console.log(selectedNode)
                 // now remove the element from the parent, and insert it into the new elements children
-                var index = draggingNode.parent.children.indexOf(draggingNode);
-                if (index > -1) {
-                    draggingNode.parent.children.splice(index, 1);
+                var index1 = draggingNode.parent.children.indexOf(draggingNode);
+                let dragParent = draggingNode.parent;
+                let dragDepth = draggingNode.depth;
+                var index2 = selectedNode.parent.children.indexOf(selectedNode);
+                let selectedParent = selectedNode.parent;
+                let selectedDepth = selectedNode.depth;
+
+                if (index1 > -1) {
+                    dragParent.children.splice(index1, 1, selectedNode);
+                    selectedNode.parent = dragParent;
+                    selectedNode.depth = dragDepth;
+                    updateChildDepths(selectedNode);
                 }
-                if (typeof selectedNode.children !== 'undefined' || typeof selectedNode._children !== 'undefined') {
-                    if (typeof selectedNode.children !== 'undefined') {
-                        selectedNode.children.push(draggingNode);
-                    } else {
-                        selectedNode._children.push(draggingNode);
-                    }
-                } else {
-                    selectedNode.children = [];
-                    selectedNode.children.push(draggingNode);
+                
+                if (index2 > -1) {
+                    selectedParent.children.splice(index2, 1, draggingNode);
+                    draggingNode.parent = selectedParent;
+                    draggingNode.depth = selectedDepth;
+                    updateChildDepths(draggingNode);
                 }
-                // Make sure that the node being added to is expanded so user can see added node is correctly moved
-                expand(selectedNode);
-                sortTree();
+
+                // if (typeof selectedNode.children !== 'undefined' || typeof selectedNode._children !== 'undefined') {
+                //     if (typeof selectedNode.children !== 'undefined') {
+                //         selectedNode.children.push(draggingNode);
+                //     } else {
+                //         selectedNode._children.push(draggingNode);
+                //     }
+                // } else {
+                //     selectedNode.children = [];
+                //     selectedNode.children.push(draggingNode);
+                // }
+                // // Make sure that the node being added to is expanded so user can see added node is correctly moved
+                // expand(selectedNode);
+                // sortTree();
                 endDrag();
             } else {
                 endDrag();
@@ -138,26 +192,6 @@ var updateTempConnector = function() {
                     }
                 }];
             }
-            var link = svg.selectAll(".templink").data(data);
-    
-            function diagonal(s,d) {
-                path = `M ${s.x} ${s.y}
-                        C ${(s.x + d.x)/2} ${s.y}
-                          ${(s.x + d.x)/2} ${d.y}
-                          ${d.x} ${d.y}`;
-                return path;
-            };
-
-            link.enter().append("path")
-                .attr("class", "templink")
-                .attr("d", function(d) {
-                    return diagonal(draggingNode, selectedNode)
-                })
-                .attr('pointer-events', 'none');
-    
-            //link.attr("d", d3.svg.diagonal());
-    
-            link.exit().remove();
         };
 
         function centerNode(source) {
