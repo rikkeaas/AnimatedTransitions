@@ -16,8 +16,6 @@ function inputCommit() {
     document.getElementById("userInput").value = "";
     let valid = tokenize(userString);
     document.getElementById("userString").innerHTML = userString;
-    //d3.select('b').style('color', 'red');
-
     if (valid) {
         let tree = parseExpr(userString.split(" ").filter(e => e))[0]
         createTree(tree);

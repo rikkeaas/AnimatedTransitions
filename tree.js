@@ -27,8 +27,6 @@ function forwardButtonClick(event) {
                 d.children = [];
             }
             tempNode = d._children[0];
-            tempNode.data.concatName = " ".repeat(tempNode.data.name.length);
-            console.log(tempNode)
             if (tempNode.data.invalid) {
                 invalidate(tempNode);
             }
@@ -174,7 +172,7 @@ function update(source) {
         let n = d.data.name;
         n += (d._children && d.children) ? concatNames(d.children[0].data, false) : "";
         if (d._children && d.children) {
-            n += concatNames(d._children[0].data, false);
+            n += " " + concatNames(d._children[0].data, false);
         }
         else if (d._children && !d.children) {
             n += concatNames(d._children[0].data, false) + " " + concatNames(d._children[1].data, false);
@@ -203,10 +201,10 @@ function update(source) {
     nodeEnter
         .append('rect')
         .attr('class', 'node')
-        .attr('height', 0)
-        .attr('width', 0)
+        .attr('height', 30)
+        .attr('width', 70)
         .style('opacity', '0')
-        //.style('stroke','white')
+        .style('stroke','white')
         .style('fill', 'while');
     
     var nodeText = nodeEnter
@@ -217,47 +215,31 @@ function update(source) {
         .append('text')
         .attr('class', 'mainName')
         .attr('dy', '.35em')
-        .attr('dx', function (d) {
-            return -3*fullName(d)
-        })
-        .attr('text-anchor', 'end') 
-        //.text(function (d) {return d.data.name})
+        .attr('dx', '-25')
+        .attr('text-anchor', 'start') 
         
     nodeText
         .append('text')
-        .attr('class', 'expandedChild')
-        .attr('dy', '.35em')
-        .attr('dx', '0')
-        .attr('text-anchor', 'middle') 
-        // .text(function (d) {
-        //     if (d._children && d.children) {
-        //         return d.children[0].name;
-        //     }
-        // })
-        
-    nodeText
-        .append('text')
-        .attr('class', 'nonExpandedChild')
+        .attr('class', 'fstChild')
         .attr('dy', '.35em')
         .attr('dx', function (d) {
-            return 3*fullName(d)
+            return -25 + 10 * d.data.name.length
         })
         .attr('text-anchor', 'start') 
-        // .text(function (d) {
-        //     if (d._children && d.children) {
-        //         return d._children[0].name;
-        //     }
-        //     if (d._children && !d.children) {
-        //         return d._children[0].name + " " + d._children[1].name;
-        //     }
-        // })
-    
-        //function(d) {
-            //if (d._children) {
-            //    return concatNames(d.data, false);
-            //}
-           // return d.data.name;
-        //});
+        
+    nodeText
+        .append('text')
+        .attr('class', 'sndChild')
+        .attr('dy', '.35em')
+        .attr('dx', function (d) {
+            if (d.children) {
+                return -25 + 10 * (d.data.name.length + concatNames(d.children[0].data, false).length)
+            }
+            if (d._children)
+                return -25 + 10 * (d.data.name.length + concatNames(d._children[0].data, false).length)
+            return 0
+        })
+        .attr('text-anchor', 'start') 
 
 
     var nodeUpdate = nodeEnter.merge(node);
@@ -294,31 +276,38 @@ function update(source) {
             if (d.data.invalid) return "Invalid"
             return d.data.name
         })
-        .attr('dx', function (d) {
-            return -3*fullName(d)
-        })
     
     nodeUpdate
-        .select('text.expandedChild')
+        .select('text.fstChild')
         .text(function (d) {
-            if (d._children && d.children) {
-                //console.log("-".repeat(concatNames(d.children[0].data, false).length))
-                return "-".repeat(concatNames(d.children[0].data, false).length);
+            if (d.children) {
+                return concatNames(d.children[0].data, false);
             }
-        })
-    
-    nodeUpdate
-        .select('text.nonExpandedChild')
-        .text(function (d) {
-            if (d._children && d.children) {
+            if (d._children) {
                 return concatNames(d._children[0].data, false);
             }
-            if (d._children && !d.children) {
-                return concatNames(d._children[0].data, false) + " " + concatNames(d._children[1].data, false);
-            }
         })
-        .attr('dx', function (d) {
-            return 3*fullName(d)
+        .attr('id', function(d) {
+            if (d.children && d._children) return 'expanded'
+            if (d.children) return 'allExpanded'
+            return 'nonExpanded'
+        })
+        
+    
+    nodeUpdate
+        .select('text.sndChild')
+        .text(function (d) {
+            if (d.children && d._children) {
+                return concatNames(d._children[0].data, false);
+            }
+            if (!d.children && d._children) {
+                return concatNames(d._children[1].data, false);
+            }
+            if (d.children) return concatNames(d.children[1].data, false);
+        })
+        .attr('id', function(d) {
+            if (d.children && !d._children) return 'allExpanded'
+            return 'nonExpanded'
         })
 
 
@@ -331,7 +320,11 @@ function update(source) {
         })
         .remove();
     
-    nodeExit.select('rect').attr('height', 0).attr('width', 0);
+    nodeExit
+        .select('rect')
+        .style('opacity', '0')
+        .style('fill', 'while')
+        .style('stroke','white');//attr('height', 0).attr('width', 0);
     nodeExit.select('text').style('fill-opacity', 0);
     
     // Links
