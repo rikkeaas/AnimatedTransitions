@@ -192,6 +192,7 @@ function update(source) {
     var nodeEnter = node
         .enter()
         .append('g')
+        .call(dragListener)
         .attr('class', 'node')
         .attr('transform', function(d) {
             return "translate(" + (source.x0) + ", " + source.y0 + ")";
@@ -206,6 +207,20 @@ function update(source) {
         .style('opacity', '0')
         .style('stroke','white')
         .style('fill', 'while');
+
+    nodeEnter
+        .append("circle")
+        .attr('class', 'ghostCircle')
+        .attr("r", 40)
+        .attr("opacity", 0.2) // change this to zero to hide the target area
+        .style("fill", "#f7b733")
+        .attr('pointer-events', 'mouseover')
+        .on("mouseover", function(event, node) {
+            overCircle(node);
+        })
+        .on("mouseout", function(event, node) {
+            outCircle(node);
+        });
     
     var nodeText = nodeEnter
         .append('g')

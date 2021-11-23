@@ -213,3 +213,12 @@
     display: flex;
     flex-direction: column;
 }
+
+
+.ghostCircle.show{
+    display:block;
+}
+
+.ghostCircle, .activeDrag .ghostCircle{
+     display: none;
+}
