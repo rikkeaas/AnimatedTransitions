@@ -291,6 +291,7 @@ function update(source) {
             if (d.data.invalid) return "Invalid"
             return d.data.name
         })
+        
     
     nodeUpdate
         .select('text.fstChild')
@@ -307,7 +308,9 @@ function update(source) {
             if (d.children) return 'allExpanded'
             return 'nonExpanded'
         })
-        
+        .attr('dx', function (d) {
+            return -25 + 10 * d.data.name.length
+        })
     
     nodeUpdate
         .select('text.sndChild')
@@ -323,6 +326,14 @@ function update(source) {
         .attr('id', function(d) {
             if (d.children && !d._children) return 'allExpanded'
             return 'nonExpanded'
+        })
+        .attr('dx', function (d) {
+            if (d.children) {
+                return -25 + 10 * (d.data.name.length + concatNames(d.children[0].data, false).length)
+            }
+            if (d._children)
+                return -25 + 10 * (d.data.name.length + concatNames(d._children[0].data, false).length)
+            return 0
         })
 
 

@@ -3,8 +3,9 @@ let invalid = "invalid"
 
 d3
 .select('h1')
-.style('font-size', '40px')
-.style('color', '#f6f3fc');
+.style('font-size', '35px')
+.style('color', '#f6f3fc')
+.style('margin', '10px');
 
 
 var userString = "";
@@ -20,6 +21,11 @@ function inputCommit() {
         let tree = parseExpr(userString.split(" ").filter(e => e))[0]
         createTree(tree);
     }
+}
+
+function updateUserstring(newUserString) {
+    userString = newUserString;
+    document.getElementById("userString").innerHTML = userString;
 }
 
 function isNumeric(str) {

@@ -22,6 +22,21 @@ function initiateDrag(d, domNode) {
          return false;
     }).remove();
 
+    let nodes = treemap(d);
+    
+    links = nodes.descendants().slice(1);
+    svg.selectAll('path.link')
+        .data(links, function(d) {
+            return d.id;
+        }).remove();
+    svg.selectAll('g.node')
+        .data(nodes, function(d) {
+            return d.id;
+        }).filter(function (d,i) {
+            if (d.id == draggingNode.id) return false;
+            return true;
+        }).remove();
+
     dragStarted = null;
 }
   
@@ -53,6 +68,17 @@ function isAncestor(node, ancestor) {
     return false;
 }
 
+function moveChildren(dx, dy, node) {
+    node.x0 += dx;
+    node.y0 += dy;
+
+    if (node.children) {
+        node.children.forEach(child => {
+            moveChildren(dx, dy, child)
+        });
+    }
+}
+
 dragListener = d3.drag()
         .on("start", function(event, d) {
             if (d == root) {
@@ -66,12 +92,15 @@ dragListener = d3.drag()
             }
             if (dragStarted) {
                 domNode = this;
-                console.log("Thhiiis", this);
                 initiateDrag(d, domNode);
             }
 
-            d.x0 = event.x;
-            d.y0 = event.y;
+            let dx = event.x - d.x0;
+            let dy = event.y - d.y0;
+
+            moveChildren(dx, dy, d);
+            // d.x0 = event.x;
+            // d.y0 = event.y;
             var node = d3.select(this);
             node.attr("transform", "translate(" + d.x0 + "," + d.y0 + ")");
             
@@ -91,11 +120,14 @@ dragListener = d3.drag()
                     return;
                 }
                 
-                var index1 = draggingNode.parent.children.indexOf(draggingNode);
                 let dragParent = draggingNode.parent;
+                var index1 = dragParent.children.indexOf(draggingNode);
+                let pIdx1 = dragParent.data.children.indexOf(draggingNode.data);
                 let dragDepth = draggingNode.depth;
-                var index2 = selectedNode.parent.children.indexOf(selectedNode);
+
                 let selectedParent = selectedNode.parent;
+                var index2 = selectedParent.children.indexOf(selectedNode);
+                let pIdx2 = selectedParent.data.children.indexOf(selectedNode.data);
                 let selectedDepth = selectedNode.depth;
 
                 if (index1 > -1) {
@@ -103,6 +135,7 @@ dragListener = d3.drag()
                     selectedNode.parent = dragParent;
                     selectedNode.depth = dragDepth;
                     updateChildDepths(selectedNode);
+                    dragParent.data.children.splice(pIdx1, 1, selectedNode.data);
                 }
                 
                 if (index2 > -1) {
@@ -110,6 +143,7 @@ dragListener = d3.drag()
                     draggingNode.parent = selectedParent;
                     draggingNode.depth = selectedDepth;
                     updateChildDepths(draggingNode);
+                    selectedParent.data.children.splice(pIdx2, 1, draggingNode.data);
                 }
                 endDrag();
             } else {
@@ -124,6 +158,7 @@ function endDrag() {
             d3.select(domNode).select('.ghostCircle').attr('pointer-events', '');
             if (draggingNode !== null) {
                 update(root);
+                updateUserstring(concatNames(root.data, false))
                 draggingNode = null;
             }
         }

@@ -185,6 +185,7 @@
 
 .node text {
     font: 20px sans-serif;
+    pointer-events: none;
 }
 
 .mainName {
