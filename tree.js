@@ -1,8 +1,17 @@
+// var btns = d3
+//     .select('.container')
+//     .append('g')
+//     .attr('id', 'my-button')
+
+// btns.append('h3')
+//     .attr('class')
+    
 var btns = d3
     .select('.container')
+    .select('g')
     .append('g')
-    .attr('id', 'my-button')
-    
+    .attr('class', 'buttons')
+
 var bbtn =btns
     .append('button')
     .attr('disabled', '')
@@ -122,7 +131,7 @@ function childHasHiddenChildren(node) {
     return false;
 }
 
-var margin = { top: 20, right: 20, bottom: 20, left: 20};
+var margin = { top: 50, right: 20, bottom: 20, left: 20};
 var width = 960 - margin.left - margin.right;
 var height = 640 - margin.top - margin.left;
 
@@ -141,7 +150,7 @@ function createTree(treeData) {
     svg.selectAll('*').remove(); // Removing previous tree if it exists
 
     var i = 0;
-    treemap = d3.tree().size([height, width]);
+    treemap = d3.tree().size([width, height]);
     root = d3.hierarchy(treeData, function(d) {
         return d.children;
     });
@@ -154,6 +163,7 @@ function createTree(treeData) {
     // nodes 
     var nodes = treeData.descendants(); // Collapsing the tree to the initial state
     nodes.forEach(d => {
+        d.aChildren = d.children;
         d._children = d.children;
         d.children = null;
     });
@@ -162,28 +172,28 @@ function createTree(treeData) {
         fbtn.attr('disabled', null);
     }
     bbtn.attr('disabled', '');
+
+    console.log(root)
     update(root);
 }
 
 function update(source) {
     var treeData = treemap(root);
 
-    function fullName(d) {
-        let n = d.data.name;
-        n += (d._children && d.children) ? concatNames(d.children[0].data, false) : "";
-        if (d._children && d.children) {
-            n += " " + concatNames(d._children[0].data, false);
-        }
-        else if (d._children && !d.children) {
-            n += concatNames(d._children[0].data, false) + " " + concatNames(d._children[1].data, false);
-        }
-        return n.length;
-    }
-
     // nodes 
     var nodes = treeData.descendants();
     nodes.forEach(d => {
-        d.y = d.depth * 120;
+        d.y = d.depth * 100;
+
+        if (d.parent && d.parent.data.children.indexOf(d.data) === 0) {
+            d.x = Math.max(0, d.parent.x - (d.height + 1) * (90 - 10*d.depth)/1.5);
+        }
+        else if (d.parent && d.parent.data.children.indexOf(d.data) === 1) {
+            d.x = Math.min(960, d.parent.x + (d.height + 1) * (90 - 10*d.depth)/1.5);
+        }
+        else {
+            d.x = 460;
+        }
     });
     var node = svg.selectAll('g.node').data(nodes, function(d) {
         return d.id || (d.id = ++ i);
@@ -200,7 +210,7 @@ function update(source) {
             if (d.parent && d.parent.children && !d.parent._children)
                 return "translate(" + (d.parent.x0 + (-20 + 10 * (2 + d.parent.data.name.length + 2 + concatNames(d.parent.children[0].data, false).length))) + ", " + d.parent.y0 + ")";
             
-            return "translate(" + source.x0 + ", " + source.y0 + ")";
+            return "translate(" + source.x + ", " + source.y + ")";
             
         })
     
@@ -296,8 +306,14 @@ function update(source) {
             if (d.data.invalid) return "Invalid"
             return d.data.name
         })
-        
-    
+
+    nodeUpdate
+        .select('text.mainName')
+        .text(function (d) {
+            if (d.data.invalid) return "Invalid"
+            return d.data.name
+        })
+
     nodeUpdate
         .select('text.fstChild')
         .text(function (d) {
@@ -307,15 +323,24 @@ function update(source) {
             if (d._children) {
                 return concatNames(d._children[0].data, false);
             }
+            if (d.children) ease = d3.easeExpOut;
+            else ease = d3.easeExpIn;
         })
         .transition()
+        .ease(function(t) {
+            let d = nodeUpdate._groups[0][0].__data__;
+            if (d.children) {
+                return d3.easeExpOut(t)
+            }
+            return d3.easeExpIn(t)
+        })
         .duration(duration)
         .style('opacity', function(d) {
-            if (d.children && d._children) return '1'
+            if (d.children && d._children) return '0.2' // expanded
             if (d.children) return '0'
-            return '1'})
+            return '1'}) // collapsed
         .attr('id', function(d) {
-            if (d.children && d._children) return 'expanded'
+            if (d.children && d._children) return 'nonExpanded'
             if (d.children) return 'allExpanded'
             return 'nonExpanded'
         })
@@ -336,11 +361,20 @@ function update(source) {
         })
         
         .transition()
-        .ease(d3.easeExp)
+        .ease(function(t) {
+                let d = nodeUpdate._groups[0][0].__data__;
+                //console.log(d)
+                if (d.children && !d._children) {
+                    //console.log("out")
+                    return d3.easeExpOut(t)
+                }
+                //console.log("in")
+                return d3.easeExpIn(t)
+            })
         .duration(duration)
         .style('opacity', function(d) {
-            if (d.children && !d._children) return '0'
-            return '1'})
+            if (d.children && !d._children) return '0' // Expanded
+            return '1'}) // Collapsed
         .attr('id', function(d) {
                 if (d.children && !d._children) return 'allExpanded'
                 return 'nonExpanded'
@@ -360,7 +394,6 @@ function update(source) {
         .transition()
         .duration(duration)
         .attr('transform', function (d) {
-            console.log(d)
             if (d.parent && d.parent.children) { // Exited node is the second child
                 return 'translate(' + (source.x + -25 + 10 * (2 + d.parent.data.name.length + 2 + concatNames(d.parent.children[0].data, false).length)) + ',' + source.y + ')';
             }
@@ -376,7 +409,12 @@ function update(source) {
         .style('opacity', '0')
         .style('fill', 'while')
         .style('stroke','white');
-    nodeExit.select('text').style('fill-opacity', 0);
+    nodeExit
+        .select('text')
+        .transition()
+        .ease(d3.easeExpIn)
+        .duration(duration)
+        .style('fill-opacity', 0);
     
     // Links
     function diagonal(s,d) {

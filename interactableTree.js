@@ -58,6 +58,33 @@ function updateChildDepths(parent) {
     }
 }
 
+function updateChildHeights(parent) {
+    let pHeight = parent.height;
+
+    if (parent.children) {
+        parent.children.forEach(child => {
+            child.height = pHeight - 1
+            updateChildHeights(child);
+        });
+    }
+
+    if (parent._children) {
+        parent._children.forEach(child => {
+            child.height = pHeight - 1
+            updateChildHeights(child);
+        });
+    }
+
+    while (parent.parent) {
+        console.log(parent)
+        if (parent.parent.height < parent.height + 1) {
+            parent.parent.height = parent.height + 1;
+            parent = parent.parent;
+        }
+        else break;
+    }
+}
+
 function isAncestor(node, ancestor) {
     while (node.parent) {
         node = node.parent;
@@ -135,6 +162,7 @@ dragListener = d3.drag()
                     selectedNode.parent = dragParent;
                     selectedNode.depth = dragDepth;
                     updateChildDepths(selectedNode);
+                    updateChildHeights(selectedNode);
                     dragParent.data.children.splice(pIdx1, 1, selectedNode.data);
                 }
                 
@@ -143,6 +171,7 @@ dragListener = d3.drag()
                     draggingNode.parent = selectedParent;
                     draggingNode.depth = selectedDepth;
                     updateChildDepths(draggingNode);
+                    updateChildHeights(draggingNode);
                     selectedParent.data.children.splice(pIdx2, 1, draggingNode.data);
                 }
                 endDrag();

@@ -16,16 +16,31 @@ function inputCommit() {
     userString = input;
     document.getElementById("userInput").value = "";
     let valid = tokenize(userString);
-    document.getElementById("userString").innerHTML = userString;
+    if (!valid) {
+        document.getElementById("userString").innerHTML = "Cannot parse string with invalid tokens: " + userString;
+    }
     if (valid) {
-        let tree = parseExpr(userString.split(" ").filter(e => e))[0]
-        createTree(tree);
+        let [b,tree] = parseExpr(userString.split(" ").filter(e => e))
+        if (b) {
+            document.getElementById("userString").innerHTML = "Parsing <b class='error'>invalid</b> string: " + userString;
+        }
+        else {
+            document.getElementById("userString").innerHTML = "Parsing string: " + userString;
+        }
+        createTree(tree[0]);
     }
 }
 
 function updateUserstring(newUserString) {
     userString = newUserString;
-    document.getElementById("userString").innerHTML = userString;
+    let [b,tree] = parseExpr(userString.split(" ").filter(e => e));
+    if (b) {
+        document.getElementById("userString").innerHTML = "Parsing <b class='error'>invalid</b> string: " + userString;
+    }
+    else {
+        document.getElementById("userString").innerHTML = "Parsing string: " + userString;
+    }
+    //document.getElementById("userString").innerHTML = userString;
 }
 
 function isNumeric(str) {
@@ -50,66 +65,55 @@ function tokenize(input) {
 }
 
 function parseExpr(tokens) {
-    if (tokens === []) return [{name: "", concatName: "", invalid: true},[]] // Error??
+    if (tokens === []) return [true,[{name: "", concatName: "", invalid: true},[]]] // Error??
 
     switch (tokens[0]) {
         case "*":
             let resM = parseExpr(tokens.slice(1))
-            //if (resM[0].name === invalid) return [null, []]
             
-            let resM2 = parseExpr(resM[1])
-            //if (resM2[0] === null) return [null, []]
-            //else {
-                return [{
+            let resM2 = parseExpr(resM[1][1])
+                return [resM[0]||resM2[0],[{
                     name: "*",
                     concatName: "*",
                     children: [
-                        resM[0],
-                        resM2[0]
-                    ]}, resM2[1]]
-            //}
+                        resM[1][0],
+                        resM2[1][0]
+                    ]}, resM2[1][1]]]
             break;
         case "+":
             let resA = parseExpr(tokens.slice(1))
-            //if (resA[0] === null) return [null, []]
             
-            let resA2 = parseExpr(resA[1])
-            //if (resA2[0] === null) return [null, []]
-            //else {
-                return [{
+            let resA2 = parseExpr(resA[1][1])
+                return [resA[0]||resA2[0],[{
                     name: "+",
                     concatName: "+",
                     children: [
-                        resA[0],
-                        resA2[0]
-                    ]}, resA2[1]]
-            //}
+                        resA[1][0],
+                        resA2[1][0]
+                    ]}, resA2[1][1]]]
             break;
         case "-":
             let resS = parseExpr(tokens.slice(1))
-            //if (resS[0] === null) return [null, []]
             
-            let resS2 = parseExpr(resS[1])
-            //if (resS2[0] === null) return [null, []]
-            //else {
-                return [{
+            let resS2 = parseExpr(resS[1][1])
+                return [resS[0]||resS2[0],[{
                     name: "-",
                     concatName: "-",
                     children: [
-                        resS[0],
-                        resS2[0]
-                    ]}, resS2[1]]
+                        resS[1][0],
+                        resS2[1][0]
+                    ]}, resS2[1][1]]]
             //}
             break;
         default:
             if (isNumeric(tokens[0])) {
-                return [{
+                return [false,[{
                     name: String(tokens[0]),
                     concatName: String(tokens[0])
-                }, tokens.slice(1)]
+                }, tokens.slice(1)]]
             }
             else {
-                return [{name: "", concatName: "", invalid: true}, tokens.slice(1)]
+                return [true,[{name: "", concatName: "", invalid: true}, tokens.slice(1)]]
             }
             break;
     }

@@ -26,15 +26,19 @@
                 
                     <form class="form" id="form" onsubmit="return false;">
                         <input type="text" id="userInput" />
-                        <div>
+                        
                             <button class="btn-parse" type="button" onclick="inputCommit();">Parse String</button>
-                        </div>
+                        
                     </form>
                 
-                <div id="userString"></div>
+                
             </div>
         </div>
-        <div class="container"></div>
+        <div class="container">
+            <g id="my-button">
+                <p id="userString">Enter string to parse</p>
+            </g>
+        </div>
 
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <script src="index.js"></script>
