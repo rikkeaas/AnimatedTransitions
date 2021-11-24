@@ -195,9 +195,14 @@ function update(source) {
         .call(dragListener)
         .attr('class', 'node')
         .attr('transform', function(d) {
-            return "translate(" + (source.x0) + ", " + source.y0 + ")";
+            if (d.parent && d.parent.children && d.parent._children)
+                return "translate(" + (source.x0 + (-25 + 10 * (d.parent.data.name.length + 1))) + ", " + source.y0 + ")";
+            if (d.parent && d.parent.children && !d.parent._children)
+                return "translate(" + (source.x0 + (-25 + 10 * (1 + d.parent.data.name.length + 1 + concatNames(d.parent.children[0].data, false).length))) + ", " + source.y0 + ")";
+            
+            return "translate(" + source.x0 + ", " + source.y0 + ")";
+            
         })
-        //.on('click', click);
     
     nodeEnter
         .append('rect')
@@ -238,7 +243,7 @@ function update(source) {
         .attr('class', 'fstChild')
         .attr('dy', '.35em')
         .attr('dx', function (d) {
-            return -25 + 10 * d.data.name.length
+            return -25 + 10 * (d.data.name.length + 1)
         })
         .attr('text-anchor', 'start') 
         
@@ -248,10 +253,10 @@ function update(source) {
         .attr('dy', '.35em')
         .attr('dx', function (d) {
             if (d.children) {
-                return -25 + 10 * (d.data.name.length + concatNames(d.children[0].data, false).length)
+                return -25 + 10 * (1 + d.data.name.length + 1 + concatNames(d.children[0].data, false).length)
             }
             if (d._children)
-                return -25 + 10 * (d.data.name.length + concatNames(d._children[0].data, false).length)
+                return -25 + 10 * (1 + d.data.name.length + 1 + concatNames(d._children[0].data, false).length)
             return 0
         })
         .attr('text-anchor', 'start') 
@@ -309,7 +314,7 @@ function update(source) {
             return 'nonExpanded'
         })
         .attr('dx', function (d) {
-            return -25 + 10 * d.data.name.length
+            return -25 + 10 * (d.data.name.length + 1)
         })
     
     nodeUpdate
@@ -329,10 +334,10 @@ function update(source) {
         })
         .attr('dx', function (d) {
             if (d.children) {
-                return -25 + 10 * (d.data.name.length + concatNames(d.children[0].data, false).length)
+                return -25 + 10 * (1 + d.data.name.length + 1 + concatNames(d.children[0].data, false).length)
             }
             if (d._children)
-                return -25 + 10 * (d.data.name.length + concatNames(d._children[0].data, false).length)
+                return -25 + 10 * (1 + d.data.name.length + 1 + concatNames(d._children[0].data, false).length)
             return 0
         })
 
@@ -398,15 +403,4 @@ function update(source) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
-
-    // function click(event, d) {
-    //     if (d.children) {
-    //         d._children = d.children;
-    //         d.children = null;
-    //     } else {
-    //         d.children = d._children;
-    //         d._children = null;
-    //     }
-    //     update(d);
-    // };
 }
