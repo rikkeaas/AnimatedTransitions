@@ -196,9 +196,9 @@ function update(source) {
         .attr('class', 'node')
         .attr('transform', function(d) {
             if (d.parent && d.parent.children && d.parent._children)
-                return "translate(" + (source.x0 + (-25 + 10 * (d.parent.data.name.length + 1))) + ", " + source.y0 + ")";
+                return "translate(" + (d.parent.x0 + (-34 + 10 * (d.parent.data.name.length + 4))) + ", " + d.parent.y0 + ")";
             if (d.parent && d.parent.children && !d.parent._children)
-                return "translate(" + (source.x0 + (-25 + 10 * (1 + d.parent.data.name.length + 1 + concatNames(d.parent.children[0].data, false).length))) + ", " + source.y0 + ")";
+                return "translate(" + (d.parent.x0 + (-20 + 10 * (2 + d.parent.data.name.length + 2 + concatNames(d.parent.children[0].data, false).length))) + ", " + d.parent.y0 + ")";
             
             return "translate(" + source.x0 + ", " + source.y0 + ")";
             
@@ -308,6 +308,12 @@ function update(source) {
                 return concatNames(d._children[0].data, false);
             }
         })
+        .transition()
+        .duration(duration)
+        .style('opacity', function(d) {
+            if (d.children && d._children) return '1'
+            if (d.children) return '0'
+            return '1'})
         .attr('id', function(d) {
             if (d.children && d._children) return 'expanded'
             if (d.children) return 'allExpanded'
@@ -328,10 +334,17 @@ function update(source) {
             }
             if (d.children) return concatNames(d.children[1].data, false);
         })
+        
+        .transition()
+        .ease(d3.easeExp)
+        .duration(duration)
+        .style('opacity', function(d) {
+            if (d.children && !d._children) return '0'
+            return '1'})
         .attr('id', function(d) {
-            if (d.children && !d._children) return 'allExpanded'
-            return 'nonExpanded'
-        })
+                if (d.children && !d._children) return 'allExpanded'
+                return 'nonExpanded'
+            })
         .attr('dx', function (d) {
             if (d.children) {
                 return -25 + 10 * (1 + d.data.name.length + 1 + concatNames(d.children[0].data, false).length)
@@ -347,6 +360,13 @@ function update(source) {
         .transition()
         .duration(duration)
         .attr('transform', function (d) {
+            console.log(d)
+            if (d.parent && d.parent.children) { // Exited node is the second child
+                return 'translate(' + (source.x + -25 + 10 * (2 + d.parent.data.name.length + 2 + concatNames(d.parent.children[0].data, false).length)) + ',' + source.y + ')';
+            }
+            if (d.parent && d.parent._children) { // Exited node is the first child
+                return 'translate(' + (source.x + -20 + 10 * (d.parent.data.name.length + 3)) + ',' + source.y + ')';
+            }
             return 'translate(' + source.x + ',' + source.y + ')';
         })
         .remove();
@@ -355,7 +375,7 @@ function update(source) {
         .select('rect')
         .style('opacity', '0')
         .style('fill', 'while')
-        .style('stroke','white');//attr('height', 0).attr('width', 0);
+        .style('stroke','white');
     nodeExit.select('text').style('fill-opacity', 0);
     
     // Links
@@ -377,6 +397,7 @@ function update(source) {
         .insert('path', 'g')
         .attr('class', 'link')
         .attr('d', function(d) {
+            if (d.parent) return diagonal(d.parent, d.parent)
             var o = {x: source.x0, y: source.y0}
             return diagonal(o, o);
         });
